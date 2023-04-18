@@ -7,7 +7,11 @@ const router = express.Router();
 
 const { db } = require("../db");
 
-
+router.get("/", (req, res, next) => {
+    return res.json({
+        value: "Hello world",
+    });
+})
 
 
 module.exports = {
