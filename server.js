@@ -7,6 +7,6 @@
 const app = require("./app");
 
 
-app.listen(3000, function () {
-  console.log("Listening on 3000");
+app.listen(3000, "127.0.0.1", () => {
+    console.log("Listening on 127.0.0.1, port 3000");
 });
