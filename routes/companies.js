@@ -41,6 +41,11 @@ router.get("/:code", async (req, res, next) => {
              [req.params.code]
         );
 
+        // Throw error if company not found
+        if (result.rows.length === 0) {
+            throw new ExpressError("Company not found!", 404);
+        }
+
         return res.json({company: result.rows[0]});
 
     } catch(err) {
@@ -95,6 +100,11 @@ router.put("/:code", async (req, res, next) => {
              RETURNING code, name, description`,
             [name, description, req.params.code]
         );
+
+        // Throw error if company not found
+        if (result.rows.length === 0) {
+            throw new ExpressError("Company not found!", 404);
+        }
 
         return res.json(result.rows[0]);
 
