@@ -1,3 +1,6 @@
+// Ioana A Mititean
+// Exercise 33.1: Node-pg Intro
+
 /** ExpressError extends the normal JS error so we can easily
  *  add a status when we make an instance of it.
  *

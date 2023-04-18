@@ -1,4 +1,7 @@
-/** BizTime express application. */
+// Ioana A Mititean
+// Exercise 33.1: Node-pg Intro
+
+/** BizTime Express application. */
 
 
 const express = require("express");
