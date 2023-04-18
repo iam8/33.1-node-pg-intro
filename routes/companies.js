@@ -41,11 +41,6 @@ router.get("/:code", async (req, res, next) => {
              [req.params.code]
         );
 
-        // Go to global error handler if company not found
-        if (result.rows.length === 0) {
-            throw new ExpressError("Company not found!", 404);
-        }
-
         return res.json({company: result.rows[0]});
 
     } catch(err) {
@@ -72,7 +67,36 @@ router.post("/", async (req, res, next) => {
             [code, name, description]
         );
 
-        return res.status(201).json(result.rows);
+        return res.status(201).json(result.rows[0]);
+
+    } catch(err) {
+        return next(err);
+    }
+})
+
+
+/**
+ * Update an existing company.
+ *
+ * If company cannot be found, return 404 status.
+ *
+ * Request body format (JSON): {name, description}
+ *
+ * Returns JSON with updated company info, if successful: {company: {code, name, description}}
+ */
+router.put("/:code", async (req, res, next) => {
+
+    try {
+        const {name, description} = req.body;
+        const result = await db.query(
+            `UPDATE companies
+             SET name = $1, description = $2
+             WHERE code = $3
+             RETURNING code, name, description`,
+            [name, description, req.params.code]
+        );
+
+        return res.json(result.rows[0]);
 
     } catch(err) {
         return next(err);
