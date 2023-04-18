@@ -49,27 +49,10 @@ router.get("/:id", async (req, res, next) => {
             throw new ExpressError("Invoice not found!", 404);
         }
 
+        // Construct and return response
         const {code, name, description, ...invData} = result.rows[0];
         invData.company = {code, name, description};
         return res.json(invData);
-
-        // const data = result.rows[0];
-        // const {id, amt, paid, add_date, paid_date} = result.rows[0];
-        // return res.json({id, amt, paid, add_date, paid_date});
-
-        // Construct and return response
-        // return res.json({
-        //     id: data.id,
-        //     amt: data.amt,
-        //     paid: data.paid,
-        //     add_date: data.add_date,
-        //     paid_date: data.paid_date,
-        //     company: {
-        //         code: data.code,
-        //         name: data.name,
-        //         description: data.description
-        //     }
-        // });
 
     } catch(err) {
         return next(err);
