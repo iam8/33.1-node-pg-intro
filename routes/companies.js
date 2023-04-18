@@ -54,6 +54,32 @@ router.get("/:code", async (req, res, next) => {
 })
 
 
+/**
+ * Add a new company.
+ *
+ * Request body format (JSON): {code, name, description}
+ *
+ * Returns JSON with added company info, if successful: {company: {code, name, description}}
+ */
+router.post("/", async (req, res, next) => {
+
+    try {
+        const {code, name, description} = req.body;
+        const result = await db.query(
+            `INSERT INTO companies (code, name, description)
+             VALUES ($1, $2, $3)
+             RETURNING code, name, description`,
+            [code, name, description]
+        );
+
+        return res.status(201).json(result.rows);
+
+    } catch(err) {
+        return next(err);
+    }
+})
+
+
 
 module.exports = {
     router
