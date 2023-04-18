@@ -83,7 +83,7 @@ router.post("/", async (req, res, next) => {
 /**
  * Update an existing company.
  *
- * If company cannot be found, return 404 status.
+ * If company cannot be found, return 404 status response.
  *
  * Request body format (JSON): {name, description}
  *
@@ -113,6 +113,35 @@ router.put("/:code", async (req, res, next) => {
     }
 })
 
+
+/**
+ * Delete a company.
+ *
+ * If company cannot be found, return 404 status response.
+ *
+ * Return JSON on success: {status: "deleted"}
+ */
+router.delete("/:code", async (req, res, next) => {
+
+    try {
+        const result = await db.query(
+            `DELETE FROM companies
+             WHERE code = $1
+             RETURNING code`,
+             [req.params.code]
+        );
+
+        // Throw error if company not found
+        if (result.rows.length === 0) {
+            throw new ExpressError("Company not found!", 404);
+        }
+
+        return res.json({"status": "deleted"});
+
+    } catch(err) {
+        return next(err);
+    }
+})
 
 
 module.exports = {
