@@ -72,7 +72,7 @@ router.post("/", async (req, res, next) => {
             [code, name, description]
         );
 
-        return res.status(201).json(result.rows[0]);
+        return res.status(201).json({company: result.rows[0]});
 
     } catch(err) {
         return next(err);
@@ -106,7 +106,7 @@ router.put("/:code", async (req, res, next) => {
             throw new ExpressError("Company not found!", 404);
         }
 
-        return res.json(result.rows[0]);
+        return res.json({company: result.rows[0]});
 
     } catch(err) {
         return next(err);
