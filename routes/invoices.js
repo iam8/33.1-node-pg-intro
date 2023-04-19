@@ -96,7 +96,7 @@ router.post("/", async (req, res, next) => {
  *
  * If invoice cannot be found, return 404 status response.
  *
- * Request body format (JSON): {amt}
+ * Request body format (JSON): {amt, paid}
  *
  * Return JSON with updated invoice info, if successful:
  *      {invoice: {id, comp_code, amt, paid, add_date, paid_date}}
@@ -104,14 +104,21 @@ router.post("/", async (req, res, next) => {
 router.put("/:id", async (req, res, next) => {
 
     try {
-        const { amt } = req.body;
-        const result = await db.query(
-            `UPDATE invoices
-             SET amt = $1
-             WHERE id = $2
-             RETURNING id, comp_code, amt, paid, add_date, paid_date`,
-             [amt, req.params.id]
-        );
+        const { amt, paid } = req.body;
+
+        // Method 1: SQL query
+        const fullQuery = `
+            UPDATE invoices
+            SET amt = $1, paid = $2, paid_date =
+            CASE
+                WHEN $2 = TRUE AND paid_date IS NULL THEN CURRENT_DATE
+                WHEN $2 = FALSE THEN NULL
+                ELSE paid_date
+            END
+            WHERE id = $3
+            RETURNING id, comp_code, amt, paid, add_date, paid_date`
+
+        const result = await db.query(fullQuery, [amt, paid, req.params.id]);
 
         // Throw error if invoice not found
         if (result.rows.length === 0) {
@@ -119,6 +126,40 @@ router.put("/:id", async (req, res, next) => {
         }
 
         return res.json({invoice: result.rows[0]});
+
+        // Method 2: two queries in series
+        // const selectRes = await db.query(
+        //     `SELECT paid_date FROM invoices
+        //      WHERE id = $1`,
+        //      [req.params.id]
+        // );
+
+        // // Throw error if invoice not found
+        // if (selectRes.rows.length === 0) {
+        //     throw new ExpressError("Invoice not found!", 404);
+        // }
+
+        // const paidDate = selectRes.rows[0].paid_date;
+        // let updatedPaidDate;
+
+        // // Adjust value of paid date
+        // if (paid & !paidDate) {
+        //     updatedPaidDate = new Date(); //  Current date
+        // } else if (!paid) {
+        //     updatedPaidDate = null;
+        // } else {
+        //     updatedPaidDate = paidDate;
+        // }
+
+        // const updateRes = await db.query(
+        //     `UPDATE invoices
+        //      SET amt = $1, paid = $2, paid_date = $3
+        //      WHERE id = $4
+        //      RETURNING id, comp_code, amt, paid, add_date, paid_date`,
+        //      [amt, paid, updatedPaidDate, req.params.id]
+        // );
+
+        // return res.json({invoice: updateRes.rows[0]});
 
     } catch(err) {
         return next(err);
