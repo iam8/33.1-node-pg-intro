@@ -9,11 +9,13 @@ const express = require("express");
 const app = express();
 const { router: companiesRoutes } = require("./routes/companies");
 const { router: invoicesRoutes } = require("./routes/invoices");
+const { router: industriesRoutes } = require("./routes/industries");
 const { ExpressError } = require("./expressError");
 
 app.use(express.json());
 app.use("/companies", companiesRoutes);
 app.use("/invoices", invoicesRoutes);
+app.use("/industries", industriesRoutes);
 
 
 /** 404 handler */
