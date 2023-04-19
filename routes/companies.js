@@ -28,25 +28,36 @@ router.get("/", async (req, res, next) => {
 
 
 /**
- * Get a specific company, by company code: {company: {code, name, description}}
+ * Get a specific company, by company code:
+ *      {company: {code, name, description, invoices: [id, ...]}}
  *
  * If company cannot be found, return 404 status response.
  */
 router.get("/:code", async (req, res, next) => {
 
     try {
-        const result = await db.query(
+        const compRes = await db.query(
             `SELECT code, name, description FROM companies
              WHERE code = $1`,
              [req.params.code]
         );
 
         // Throw error if company not found
-        if (result.rows.length === 0) {
+        if (compRes.rows.length === 0) {
             throw new ExpressError("Company not found!", 404);
         }
 
-        return res.json({company: result.rows[0]});
+        const invRes = await db.query(
+            `SELECT id, comp_code, amt, paid, add_date, paid_date
+             FROM invoices
+             WHERE comp_code = $1`,
+             [req.params.code]
+        );
+
+        const company = compRes.rows[0];
+        company.invoices = invRes.rows;
+
+        return res.json({company});
 
     } catch(err) {
         return next(err);
