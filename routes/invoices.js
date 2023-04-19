@@ -122,6 +122,34 @@ router.put("/:id", async (req, res, next) => {
 })
 
 
+/**
+ * Delete an invoice.
+ *
+ * If invoice cannot be found, return 404 status response.
+ *
+ * Return JSON on success: {status: "deleted"}
+ */
+router.delete("/:id", async (req, res, next) => {
+
+    try {
+        const result = await db.query(
+            `DELETE FROM invoices
+             WHERE id = $1
+             RETURNING id`,
+             [req.params.id]
+        );
+
+        // Throw error if invoice not found
+        if (result.rows.length === 0) {
+            throw new ExpressError("Invoice not found!", 404);
+        }
+
+        return res.json({"status": "deleted"});
+
+    } catch(err) {
+        return next(err);
+    }
+})
 
 
 
