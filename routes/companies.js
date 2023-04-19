@@ -1,6 +1,10 @@
 // Ioana A Mititean
 // Exercise 33.1: Node-pg Intro
 
+/**
+ * Routes for companies.
+ */
+
 
 const express = require("express");
 const router = express.Router();
