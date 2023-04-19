@@ -35,24 +35,58 @@ router.get("/", async (req, res, next) => {
  */
 router.get("/:code", async (req, res, next) => {
 
+    // Method 1: sequential queries
+    // try {
+    //     const compRes = await db.query(
+    //         `SELECT code, name, description FROM companies
+    //          WHERE code = $1`,
+    //          [req.params.code]
+    //     );
+
+    //     // Throw error if company not found
+    //     if (compRes.rows.length === 0) {
+    //         throw new ExpressError("Company not found!", 404);
+    //     }
+
+    //     const invRes = await db.query(
+    //         `SELECT id, comp_code, amt, paid, add_date, paid_date
+    //          FROM invoices
+    //          WHERE comp_code = $1`,
+    //          [req.params.code]
+    //     );
+
+    //     const company = compRes.rows[0];
+    //     company.invoices = invRes.rows;
+
+    //     return res.json({company});
+
+    // } catch(err) {
+    //     return next(err);
+    // }
+
+    // Method 2: Promise.all()
     try {
-        const compRes = await db.query(
+        const compQuery = db.query(
             `SELECT code, name, description FROM companies
              WHERE code = $1`,
              [req.params.code]
         );
 
-        // Throw error if company not found
-        if (compRes.rows.length === 0) {
-            throw new ExpressError("Company not found!", 404);
-        }
-
-        const invRes = await db.query(
+        const invQuery = db.query(
             `SELECT id, comp_code, amt, paid, add_date, paid_date
              FROM invoices
              WHERE comp_code = $1`,
              [req.params.code]
         );
+
+        const queryResults = await Promise.all([compQuery, invQuery]);
+        const compRes = queryResults[0];
+        const invRes = queryResults[1];
+
+        // Throw error if company not found
+        if (compRes.rows.length === 0) {
+            throw new ExpressError("Company not found!", 404);
+        }
 
         const company = compRes.rows[0];
         company.invoices = invRes.rows;
