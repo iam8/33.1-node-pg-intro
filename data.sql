@@ -1,4 +1,3 @@
-\c biztime
 
 DROP TABLE IF EXISTS companies_industries;
 DROP TABLE IF EXISTS invoices;
