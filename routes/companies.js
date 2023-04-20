@@ -34,7 +34,7 @@ router.get("/", async (req, res, next) => {
 
 /**
  * Get a specific company, by company code:
- *      {company: {code, name, description, invoices: [id, ...], industries: [code, ...]}}
+ *      {company: {code, name, description, invoices: [id, ...]}}
  *
  * If company cannot be found, return 404 status response.
  */
@@ -84,21 +84,9 @@ router.get("/:code", async (req, res, next) => {
              [req.params.code]
         );
 
-        const indQuery = db.query(
-            `SELECT ind.code, industry
-             FROM companies AS comp
-             JOIN companies_industries as comp_ind
-                ON comp.code = comp_ind.comp_code
-             JOIN industries as ind
-             ON comp_ind.ind_code = ind.code
-             WHERE comp.code = $1`,
-             [req.params.code]
-        );
-
-        const queryResults = await Promise.all([compQuery, invQuery, indQuery]);
+        const queryResults = await Promise.all([compQuery, invQuery]);
         const compRes = queryResults[0];
         const invRes = queryResults[1];
-        const indRes = queryResults[2];
 
         // Throw error if company not found
         if (compRes.rows.length === 0) {
@@ -107,7 +95,6 @@ router.get("/:code", async (req, res, next) => {
 
         const company = compRes.rows[0];
         company.invoices = invRes.rows;
-        company.industries = indRes.rows;
 
         return res.json({company});
 
