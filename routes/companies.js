@@ -40,46 +40,91 @@ router.get("/", async (req, res, next) => {
  */
 router.get("/:code", async (req, res, next) => {
 
+    // Method 1: sequential queries
+    // try {
+    //     const compRes = await db.query(
+    //         `SELECT code, name, description FROM companies
+    //          WHERE code = $1`,
+    //          [req.params.code]
+    //     );
+
+    //     // Throw error if company not found
+    //     if (compRes.rows.length === 0) {
+    //         throw new ExpressError("Company not found!", 404);
+    //     }
+
+    //     const invRes = await db.query(
+    //         `SELECT id, comp_code, amt, paid, add_date, paid_date
+    //          FROM invoices
+    //          WHERE comp_code = $1`,
+    //          [req.params.code]
+    //     );
+
+    //     const company = compRes.rows[0];
+    //     company.invoices = invRes.rows;
+
+    //     return res.json({company});
+
+    // } catch(err) {
+    //     return next(err);
+    // }
+
+    // Method 2: Promise.all()
+    // try {
+    //     const compQuery = db.query(
+    //         `SELECT code, name, description FROM companies
+    //          WHERE code = $1`,
+    //          [req.params.code]
+    //     );
+
+    //     const invQuery = db.query(
+    //         `SELECT id, comp_code, amt, paid, add_date, paid_date
+    //          FROM invoices
+    //          WHERE comp_code = $1`,
+    //          [req.params.code]
+    //     );
+
+    //     const queryResults = await Promise.all([compQuery, invQuery]);
+    //     const compRes = queryResults[0];
+    //     const invRes = queryResults[1];
+
+    //     // Throw error if company not found
+    //     if (compRes.rows.length === 0) {
+    //         throw new ExpressError("Company not found!", 404);
+    //     }
+
+    //     const company = compRes.rows[0];
+    //     company.invoices = invRes.rows;
+
+    //     return res.json({company});
+
+    // } catch(err) {
+    //     return next(err);
+    // }
+
+    // Method 3: JOIN query
     try {
-        const compQuery = db.query(
-            `SELECT code, name, description FROM companies
+        const result = await db.query(
+            `SELECT id, amt, paid, add_date, paid_date, code, name, description
+             FROM companies LEFT JOIN invoices
+             ON invoices.comp_code = companies.code
              WHERE code = $1`,
-             [req.params.code]
+            [req.params.code]
         );
-
-        const invQuery = db.query(
-            `SELECT id, comp_code, amt, paid, add_date, paid_date
-             FROM invoices
-             WHERE comp_code = $1`,
-             [req.params.code]
-        );
-
-        const indQuery = db.query(
-            `SELECT ind.code, industry
-             FROM companies AS comp
-             JOIN companies_industries as comp_ind
-                ON comp.code = comp_ind.comp_code
-             JOIN industries as ind
-             ON comp_ind.ind_code = ind.code
-             WHERE comp.code = $1`,
-             [req.params.code]
-        );
-
-        const queryResults = await Promise.all([compQuery, invQuery, indQuery]);
-        const compRes = queryResults[0];
-        const invRes = queryResults[1];
-        const indRes = queryResults[2];
 
         // Throw error if company not found
-        if (compRes.rows.length === 0) {
+        if (result.rows.length === 0) {
             throw new ExpressError("Company not found!", 404);
         }
 
-        const company = compRes.rows[0];
-        company.invoices = invRes.rows;
-        company.industries = indRes.rows;
+        // Construct and return response
+        const {code, name, description} = result.rows[0];
+        const invoices = result.rows.map((row) => {
+            const {id, amt, paid, add_date, paid_date} = row;
+            return {id, amt, paid, add_date, paid_date};
+        })
 
-        return res.json({company});
+        return res.json({code, name, description, invoices});
 
     } catch(err) {
         return next(err);
