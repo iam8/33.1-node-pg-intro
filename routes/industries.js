@@ -80,15 +80,6 @@ router.get("/:code", async (req, res, next) => {
 router.post("/", async (req, res, next) => {
 
     try {
-        const {code, industry} = req.body;
-        const result = await db.query(
-            `INSERT INTO industries (code, industry)
-             VALUES ($1, $2)
-             RETURNING code, industry`,
-            [code, industry]
-        );
-
-        return res.status(201).json({industry: result.rows[0]});
 
     } catch(err) {
         return next(err);
@@ -99,28 +90,24 @@ router.post("/", async (req, res, next) => {
 /**
  * Associate an industry (by code) with a company.
  *
+ * If the industry or company cannot be found, return 404 status response.
+ *
  * Request body format (JSON): {comp_code}
  *
  * Return JSON with added industry-company association info, if successful:
- *      {association: {comp_code, ind_code}}
+ *      {association: {comp_code}}
  */
 router.post("/:code", async (req, res, next) => {
 
     try {
-        const {comp_code} = req.body;
-        const result = await db.query(
-            `INSERT INTO companies_industries (comp_code, ind_code)
-             VALUES ($1, $2)
-             RETURNING comp_code, ind_code`,
-            [comp_code, req.params.code]
-        );
-
-        return res.status(201).json({association: result.rows[0]});
 
     } catch(err) {
         return next(err);
     }
 })
+
+
+
 
 
 module.exports = {
